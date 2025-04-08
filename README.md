@@ -90,4 +90,28 @@ Configuration register is 0x2102
 Sending <CTRL>-Z and exit to close console session...
 Session closed.
 ```
+---
 
+## 🧩 Class Structure
+
+```python
+class NetmikoBasedConsoleConnectorViaAvocent(BaseConnection)
+class NetmikoBasedConsoleConnectorViaAvocentForCiscoCe(NetmikoBasedConsoleConnectorViaAvocent)
+```
+
+---
+
+## 🧠 Notes
+
+- This approach allows reuse of the full Netmiko command API via console sessions.
+- The prompt detection is vendor-aware and overrideable.
+- Currently optimized for Cisco-like CLI and Avocent reverse-SSH style access.
+- Easily extensible for other vendors or console server types (e.g., Digi, Lantronix).
+
+---
+
+## 🙌 Credit
+
+Built on top of [Netmiko](https://github.com/ktbyers/netmiko) – special thanks to @ktbyers and the Netmiko community!
+
+---
