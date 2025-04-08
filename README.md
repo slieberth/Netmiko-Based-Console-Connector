@@ -1,27 +1,93 @@
-## 🔌 Netmiko Extension: Console Access via Avocent Terminal Server and Netmiko Library
+# 🧰 Netmiko Console Connector via Avocent Terminal Server
 
-### Overview
+This module extends [Netmiko](https://github.com/ktbyers/netmiko) to support **console access through Avocent-style terminal servers**, such as reverse SSH connections (e.g., `ssh admin:7001@192.168.x.x`). It's useful for lab automation, hardware bring-up, or remote out-of-band access scenarios.
 
-This custom module provides an experimental `BaseConnection` subclass that allows Netmiko to manage devices via **console access behind Avocent-style terminal servers**.
+## ✨ Features
 
-### Why?
-In our test-setup the access to console ports is provided by avocent console servers . This code enables full Netmiko compatibility with those console sessions, making it possible to reuse standard `send_command*()` and automation logic.
-
----
-
-### Key Features
-
-- ✅ **Avocent login logic** with detection of `<CTRL>Z` banners and session wake-up via `\n\r`.
-- ✅ **Custom Paramiko-to-Netmiko channel wrapper** using `ChannelWrapper`.
-- ✅ **Base prompt detection** for Cisco-style prompts (`Router>`, `Switch#`, etc.).
-- ✅ **Vendor-specific subclass** with `disable_paging()` for Cisco CE.
-- ✅ **Clean disconnect** method: sends `<CTRL>-Z` and `exit` before closing session.
-- ✅ Fully Netmiko-compatible command handling (`send_command`, `send_command_timing`, etc.).
+- ✅ Works over active `paramiko` `invoke_shell()` sessions
+- ✅ Compatible with Netmiko’s full command interface
+- ✅ Automatically detects Avocent `<CTRL>Z` banner
+- ✅ Auto-detects prompt (e.g. `R1>`, `Switch#`)
+- ✅ Graceful disconnect with `<CTRL>-Z` and `exit`
+- ✅ Vendor-specific subclass: `Cisco CE` with `disable_paging`
 
 ---
 
-### Class Structure
+## 🧪 Example
+
+### Code
 
 ```python
-class NetmikoBasedConsoleConnectorViaAvocent(BaseConnection)
-class NetmikoBasedConsoleConnectorViaAvocentForCiscoCe(NetmikoBasedConsoleConnectorViaAvocent)
+if __name__ == "__main__":
+    term_ip = "192.168.2.78"
+    port_number = "7001"
+    username = f"admin:{port_number}"
+    password = "avocent"
+
+    kwargs = {
+        "device_type": "cisco_ios",
+        "session_log": None,
+        "global_delay_factor": 1,
+        "read_timeout_override": 5,
+        "session_timeout": 120,
+        "timeout": 120
+    }
+
+    net_connect, ssh = NetmikoBasedConsoleConnectorViaAvocentForCiscoCe.connect_via_avocent(
+        term_ip=term_ip,
+        port_number=port_number,
+        username=username,
+        password=password,
+        **kwargs
+    )
+
+    net_connect.disable_paging()
+
+    print("\nSending command: show version\n")
+    output = net_connect.send_command_timing("show version", cmd_verify=False, read_timeout=10)
+    print("=== Command Output ===")
+    print(output)
+    print("======================")
+
+    net_connect.disconnect()
+    ssh.close()
+    print("Session closed.")
+```
+
+Output 
+```shell
+Connecting to Acs Terminal Server (192.168.2.78, port 7001)...
+Connection established.
+Shell session started.
+[INFO] Detected <CTRL>Z banner, sending RETURN...
+=== Console output ===
+
+R1>
+R1>
+R1>
+======================
+Detected prompt line: 'R1>'
+
+Sending command: show version
+
+=== Command Output ===
+Cisco IOS Software, C870 Software (C870-ADVENTERPRISEK9-M), Version 12.4(24)T3, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2010 by Cisco Systems, Inc.
+Compiled Tue 23-Mar-10 18:21 by prod_rel_team
+
+ROM: System Bootstrap, Version 12.3(8r)YI4, RELEASE SOFTWARE
+
+R1 uptime is 2 days, 11 minutes
+System returned to ROM by power-on
+System image file is "flash:c870-adventerprisek9-mz.124-24.T3.bin"
+
+...
+
+Configuration register is 0x2102
+
+======================
+Sending <CTRL>-Z and exit to close console session...
+Session closed.
+```
+
