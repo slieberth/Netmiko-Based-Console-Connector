@@ -1,4 +1,4 @@
-# 🧰 Netmiko Console Connector via Avocent Terminal Server
+# 🧰 Experimental Netmiko Console Connector via Avocent Terminal Server
 
 This module extends [Netmiko](https://github.com/ktbyers/netmiko) to support **console access through Avocent-style terminal servers**, such as reverse SSH connections (e.g., `ssh admin:7001@192.168.x.x`). It's useful for lab automation, hardware bring-up, or remote out-of-band access scenarios.
 
